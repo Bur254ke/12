@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Doodstream Video List</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Doodstream Videos</h1>
+        <div id="video-list" class="video-list"></div>
+        <div class="pagination">
+            <button id="prev-page">Previous</button>
+            <span id="page-info"></span>
+            <button id="next-page">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const videoList = document.getElementById('video-list');
+        const prevPageBtn = document.getElementById('prev-page');
+        const nextPageBtn = document.getElementById('next-page');
+        const pageInfo = document.getElementById('page-info');
+        let currentPage = 1;
+
+        async function fetchVideos(page = 1) {
+            try {
+                const response = await fetch(`/api/videos?page=${page}`);
+                const data = await response.json();
+                const videos = data.result.files;
+                videoList.innerHTML = '';
+                videos.forEach(video => {
+                    const videoItem = document.createElement('div');
+                    videoItem.className = 'video-item';
+                    videoItem.innerHTML = `
+                        <h3>${video.title}</h3>
+                        <p>Duration: ${video.formatted_length}</p>
+                        <a href="https://doodstream.com/e/${video.file_code}" target="_blank">Watch</a>
+                    `;
+                    videoList.appendChild(videoItem);
+                });
+                pageInfo.textContent = `Page ${data.result.page} of ${data.result.total_pages}`;
+                currentPage = data.result.page;
+                prevPageBtn.disabled = currentPage === 1;
+                nextPageBtn.disabled = currentPage === data.result.total_pages;
+            } catch (error) {
+                console.error('Error fetching videos:', error);
+            }
+        }
+
+        prevPageBtn.addEventListener('click', () => fetchVideos(currentPage - 1));
+        nextPageBtn.addEventListener('click', () => fetchVideos(currentPage + 1));
+
+        fetchVideos();
+    </script>
+</body>
+</html>
